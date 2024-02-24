@@ -27,11 +27,15 @@ internal class Program {
         while (running) {
 
 
-            UpdateFrame();
-            WriteStatus();
+            UpdatePlayer();
+            UpdateGhost();
 
+            WriteStatus();
             TimeDelay();
         }
+
+    }
+    static void UpdateGhost() {
 
     }
     static void WriteStatus() {
@@ -50,7 +54,7 @@ internal class Program {
     static Direction Direction { get; set; }
     public static Position Player { get; set; }
     public static int FoodLeft { get; set; }
-    static void UpdateFrame(bool called = false) {
+    static void UpdatePlayer(bool called = false) {
         if (Console.KeyAvailable) {
             Key = Console.ReadKey(true);
         }
@@ -75,47 +79,76 @@ internal class Program {
         }
 
         bool change = false;
-        switch (Tiles[newPosTile.I][newPosTile.J].Type) {
-            case Tile.TileType.Wall:
-                break;
-            case Tile.TileType.Teleport:
-                break;
-            case Tile.TileType.Charge:
-                change = true; Charge = chargeTime; Score += 50; FoodLeft--;
-                break;
-            case Tile.TileType.Food:
-                change = true; Score += 10; FoodLeft--;
-                break;
-            case Tile.TileType.Empty:
-                change = true;
-                break;
-            case Tile.TileType.Start:
-                change = true;
-                break;
-            default:
-                break;
-        }
-        if (change) { 
+        if (newPosTile.I >= 0 && newPosTile.I <= Tiles.Length && newPosTile.J >= 0 && newPosTile.J <= Tiles[0].Length)
+            switch (Tiles[newPosTile.I][newPosTile.J].Type) {
+                case Tile.TileType.Wall:
+                    break;
+                case Tile.TileType.Teleport:
+                    newPosTile = TeleportHandler(newPosTile); change = true;
+                    break;
+                case Tile.TileType.Charge:
+                    change = true; Charge = chargeTime; Score += 50; FoodLeft--;
+                    break;
+                case Tile.TileType.Food:
+                    change = true; Score += 10; FoodLeft--;
+                    break;
+                case Tile.TileType.Empty:
+                    change = true;
+                    break;
+                case Tile.TileType.Start:
+                    change = true;
+                    break;
+                default:
+                    break;
+            }
+        if (change) {
             UpdateTile(Player);
-            Player = newPosTile; 
+            Player = newPosTile;
             UpdateTile(Player, true);
         }
 
         if (Charge > 0) Charge--;
         if (FoodLeft == 0) SetupBoard();
+
+    }
+    public static List<Position>? TeleportPostions { get; set; }
+    static Position TeleportHandler(Position position) {
+        if (TeleportPostions == null) throw new ArgumentNullException(nameof(TeleportPostions));
+
+        Random rnd = new Random();
+
+        switch (TeleportPostions.Count) {
+            case 2:
+                return TeleportPostions[position.Equals(TeleportPostions[1]) ? 0 : 1];
+            default:
+                List<Position> tempTeleport = [.. TeleportPostions];
+
+                for (int i = 0; i < tempTeleport.Count; i++)
+                    if (tempTeleport[i].Equals(position)) {
+                        tempTeleport.RemoveAt(i);
+                        break;
+                    }
+
+                return tempTeleport[rnd.Next(tempTeleport.Count)];
+        }
     }
     static void UpdateTile(Position position, bool player = false) {
         Tile tile = Tiles[position.I][position.J];
-        tile.Type = Tile.TileType.Empty;
-        tile.Art = ' ';
+        if (tile.Type is Tile.TileType.Food or Tile.TileType.Charge or Tile.TileType.Start) {
+            tile.Type = Tile.TileType.Empty;
+            tile.Art = ' ';
+        }
         Console.SetCursorPosition(position.J, position.I);
-        
+
         Console.Write(player ? "Ö" : tile.Art);
     }
 
 
     static void SetupBoard() {
         string[] boardInfo = Assets.DrawMainBoard() ?? throw new ArgumentException("board call failed");
+
+        if (TeleportPostions != null) TeleportPostions = null;
+        TeleportPostions = new List<Position>();
 
         Tiles = new Tile[boardInfo.Length][];
         for (int i = 0; i < Tiles.Length; i++) {
@@ -170,20 +203,25 @@ public class Tile {
         Start,
     }
     public TileType Type { get; set; }
-    public char Art { get;  set; }
+    public char Art { get; set; }
     public Tile(char seed, Position position) {
         Art = seed;
         switch (seed) {
             case '█': Type = TileType.Wall; break;
             case '*': Type = TileType.Food; Program.FoodLeft++; break;
             case '+': Type = TileType.Charge; Program.FoodLeft++; break;
-            case 't': Type = TileType.Teleport; Art = ' '; break;
+            case 't':
+                Type = TileType.Teleport; Art = ' ';
+                if
+                    (Program.TeleportPostions != null) Program.TeleportPostions.Add(position);
+                else
+                    Debug.WriteLine("Teleport postions unexpected null");
+                break;
             case ' ': Type = TileType.Empty; break;
             case 's': Type = TileType.Start; Art = 'Ö'; Program.Player = position; break;
             default: Type = TileType.Empty; Debug.WriteLine("unexpected empty call"); break;
         }
     }
-    
 }
 public class Position {
     public int I { get; set; }
@@ -192,6 +230,9 @@ public class Position {
     public Position(int i, int j) {
         I = i;
         J = j;
+    }
+    public bool Equals(Position position) {
+        return position.I == I && position.J == J;
     }
 }
 public enum Direction {
