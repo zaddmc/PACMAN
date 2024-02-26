@@ -57,6 +57,8 @@ internal class Program {
     static void UpdatePlayer(bool called = false) {
         if (Console.KeyAvailable) {
             Key = Console.ReadKey(true);
+            while (Console.KeyAvailable)
+                Console.ReadKey(true);
         }
 
         Direction previousDirection = Direction;
@@ -79,7 +81,7 @@ internal class Program {
         }
 
         bool change = false;
-        if (newPosTile.I >= 0 && newPosTile.I <= Tiles.Length && newPosTile.J >= 0 && newPosTile.J <= Tiles[0].Length)
+        if (newPosTile.I >= 0 && newPosTile.I < Tiles.Length && newPosTile.J >= 0 && newPosTile.J < Tiles[0].Length)
             switch (Tiles[newPosTile.I][newPosTile.J].Type) {
                 case Tile.TileType.Wall:
                     break;
@@ -212,8 +214,8 @@ public class Tile {
             case '+': Type = TileType.Charge; Program.FoodLeft++; break;
             case 't':
                 Type = TileType.Teleport; Art = ' ';
-                if
-                    (Program.TeleportPostions != null) Program.TeleportPostions.Add(position);
+                if (Program.TeleportPostions != null)
+                    Program.TeleportPostions.Add(position);
                 else
                     Debug.WriteLine("Teleport postions unexpected null");
                 break;
