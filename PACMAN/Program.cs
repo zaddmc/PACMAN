@@ -38,13 +38,6 @@ internal class Program {
     static void UpdateGhost() {
 
     }
-    static Ghost Blinky { get; set; }
-    static Ghost Pinky { get; set; }
-    static Ghost Inky { get; set; }
-    static Ghost Clyde { get; set; }
-    static void MakeGhosts() {
-
-    }
     static void WriteStatus() {
         int width = Tiles[0].Length + 5;
         int height = 3;
@@ -152,7 +145,10 @@ internal class Program {
         Console.Write(player ? "Ö" : tile.Art);
     }
 
-
+    public static Ghost Blinky { get; set; }
+    public static Ghost Pinky { get; set; }
+    public static Ghost Inky { get; set; }
+    public static Ghost Clyde { get; set; }
     static void SetupBoard() {
         string[] boardInfo = Assets.DrawMainBoard() ?? throw new ArgumentException("board call failed");
 
@@ -228,6 +224,12 @@ public class Tile {
                 break;
             case ' ': Type = TileType.Empty; break;
             case 's': Type = TileType.Start; Art = 'Ö'; Program.Player = position; break;
+         
+            case 'b': Type = TileType.Empty; Art = ' '; Program.Blinky = new Ghost("Blinky", position); break;
+            case 'p': Type = TileType.Empty; Art = ' '; Program.Blinky = new Ghost("Pinky", position); break;
+            case 'i': Type = TileType.Empty; Art = ' '; Program.Blinky = new Ghost("Inky", position); break;
+            case 'c': Type = TileType.Empty; Art = ' '; Program.Blinky = new Ghost("Clyde", position); break;
+            
             default: Type = TileType.Empty; Debug.WriteLine("unexpected empty call"); break;
         }
     }
