@@ -38,6 +38,13 @@ internal class Program {
     static void UpdateGhost() {
 
     }
+    static Ghost Blinky { get; set; }
+    static Ghost Pinky { get; set; }
+    static Ghost Inky { get; set; }
+    static Ghost Clyde { get; set; }
+    static void MakeGhosts() {
+
+    }
     static void WriteStatus() {
         int width = Tiles[0].Length + 5;
         int height = 3;
