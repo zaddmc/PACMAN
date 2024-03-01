@@ -45,3 +45,12 @@ internal class Assets {
 
 
 }
+public class Ghost {
+    public string Name { get; set; }
+    public Position Position { get; set; }
+    public Direction Direction { get; set; }
+    public Ghost(string name, Position position) { 
+        Name = name;
+        Position = position;
+    }
+}
