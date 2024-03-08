@@ -4,7 +4,7 @@ namespace PACMAN;
 
 internal class Program {
     static Tile[][]? Tiles { get; set; }
-    static TimeSpan WantedFrameTime = TimeSpan.FromSeconds(0.2);
+    static TimeSpan WantedFrameTime = TimeSpan.FromSeconds(0.15);
     static int chargeTime = 15; // how many frames the charged state will remain after taking effect
     static void Main(string[] args) {
 
@@ -28,15 +28,67 @@ internal class Program {
 
 
             UpdatePlayer();
-            UpdateGhost();
+            UpdateGhost("Blinky");
 
             WriteStatus();
             TimeDelay();
         }
 
     }
-    static void UpdateGhost() {
+    static void UpdateGhost(string name) {
+        if (Tiles == null) return;
+        Ghost ghost;
+        switch (name.ToLower()) {
+            case "blinky": ghost = Blinky; break;
+            case "pinky": ghost = Pinky; break;
+            case "inky": ghost = Inky; break;
+            case "clyde": ghost = Clyde; break;
+            default: return;
+        }
 
+        List<Tile> posiblePos = [
+            Tiles[ghost.Position.I + 1][ghost.Position.J],
+            Tiles[ghost.Position.I][ghost.Position.J + 1],
+            Tiles[ghost.Position.I - 1][ghost.Position.J],
+            Tiles[ghost.Position.I][ghost.Position.J - 1],
+        ];
+
+        switch (ghost.Direction) {
+            case Direction.North: posiblePos.RemoveAt(0); break;
+            case Direction.East: posiblePos.RemoveAt(3); break;
+            case Direction.South: posiblePos.RemoveAt(2); break;
+            case Direction.West: posiblePos.RemoveAt(1); break;
+            default: break;
+        }
+
+        for (int i = posiblePos.Count - 1; i >= 0; i--) {
+            if (posiblePos[i].Type is Tile.TileType.Wall or Tile.TileType.Teleport)
+                posiblePos.RemoveAt(i);
+        }
+
+        Position newGhostPos;
+        if (posiblePos.Count > 1)
+            switch (name.ToLower()) {
+                case "blinky":
+
+                    Tile shortest = posiblePos[0];
+                    for (int i = 1; i < posiblePos.Count; i++) {
+
+                    }
+                    break;
+                case "pinky":
+
+                    break;
+                case "inky":
+
+                    break;
+                case "clyde":
+
+                    break;
+                default: return;
+            }
+        else
+            newGhostPos = posiblePos[0].Position;
     }
     static void WriteStatus() {
         int width = Tiles[0].Length + 5;
@@ -63,11 +115,11 @@ internal class Program {
 
         Direction previousDirection = Direction;
 
-        switch (Key.KeyChar) {
-            case 'w': Direction = Direction.North; break;
-            case 'a': Direction = Direction.West; break;
-            case 's': Direction = Direction.South; break;
-            case 'd': Direction = Direction.East; break;
+        switch (Key.Key) {
+            case ConsoleKey.W or ConsoleKey.UpArrow: Direction = Direction.North; break;
+            case ConsoleKey.A or ConsoleKey.LeftArrow: Direction = Direction.West; break;
+            case ConsoleKey.S or ConsoleKey.DownArrow: Direction = Direction.South; break;
+            case ConsoleKey.D or ConsoleKey.RightArrow: Direction = Direction.East; break;
             default: break;
         }
 
@@ -209,8 +261,12 @@ public class Tile {
     }
     public TileType Type { get; set; }
     public char Art { get; set; }
+    public List<Ghost> ContainedGhosts { get; set; }
+    public Position Position { get; }
     public Tile(char seed, Position position) {
         Art = seed;
+        ContainedGhosts = new List<Ghost>();
+        Position = position;
         switch (seed) {
             case '█': Type = TileType.Wall; break;
             case '*': Type = TileType.Food; Program.FoodLeft++; break;
@@ -224,12 +280,12 @@ public class Tile {
                 break;
             case ' ': Type = TileType.Empty; break;
             case 's': Type = TileType.Start; Art = 'Ö'; Program.Player = position; break;
-         
-            case 'b': Type = TileType.Empty; Art = ' '; Program.Blinky = new Ghost("Blinky", position); break;
-            case 'p': Type = TileType.Empty; Art = ' '; Program.Blinky = new Ghost("Pinky", position); break;
-            case 'i': Type = TileType.Empty; Art = ' '; Program.Blinky = new Ghost("Inky", position); break;
-            case 'c': Type = TileType.Empty; Art = ' '; Program.Blinky = new Ghost("Clyde", position); break;
-            
+
+            case 'b': Type = TileType.Empty; Art = ' '; Program.Blinky = new Ghost("Blinky", position); ContainedGhosts.Add(Program.Blinky); break;
+            case 'p': Type = TileType.Empty; Art = ' '; Program.Pinky = new Ghost("Pinky", position); ContainedGhosts.Add(Program.Pinky); break;
+            case 'i': Type = TileType.Empty; Art = ' '; Program.Inky = new Ghost("Inky", position); ContainedGhosts.Add(Program.Inky); break;
+            case 'c': Type = TileType.Empty; Art = ' '; Program.Clyde = new Ghost("Clyde", position); ContainedGhosts.Add(Program.Clyde); break;
+
             default: Type = TileType.Empty; Debug.WriteLine("unexpected empty call"); break;
         }
     }
